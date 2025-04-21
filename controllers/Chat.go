@@ -9,7 +9,6 @@ import (
 )
 
 func GetChatsByUserId(c *fiber.Ctx) error {
-
 	userId, err := uuid.Parse(c.Params("userId"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
@@ -60,14 +59,18 @@ func GetChatsByUserId(c *fiber.Ctx) error {
 		})
 	}
 
+	hasNextPage := int64(offset+limit) < totalCount
+
 	return c.Status(200).JSON(fiber.Map{
-		"error":   false,
-		"message": "Chats fetched successfully",
-		"page":    page,
-		"total":   totalCount,
-		"data":    chats,
+		"error":       false,
+		"message":     "Chats fetched successfully",
+		"page":        page,
+		"total":       totalCount,
+		"hasNextPage": hasNextPage,
+		"data":        chats,
 	})
 }
+
 
 func EditChat(c *fiber.Ctx) error {
 
