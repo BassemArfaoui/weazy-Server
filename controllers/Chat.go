@@ -71,7 +71,7 @@ func GetChatsByUserId(c *fiber.Ctx) error {
 
 
 func EditChat(c *fiber.Ctx) error {
-	
+
 	chatId, err := uuid.Parse(c.Params("chatId"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
@@ -89,7 +89,7 @@ func EditChat(c *fiber.Ctx) error {
 		})
 	}
 
-	result := db.DB.Model(&models.Chat{}).Where("id = ?", chatId).Updates(&chat)
+	result := db.DB.Model(&models.Chat{}).Where("id = ?", chatId).Updates(&chat).First(&chat)
 	if result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{
 			"error":   true,

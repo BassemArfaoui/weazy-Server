@@ -13,4 +13,6 @@ func Setup(app *fiber.App) {
 	//chat routes
 	app.Get("/chats/:userId", ctr.GetChatsByUserId)
 
+	app.Put("/edit-chat*/:chatId", ctr.EditChat)
+
 }
