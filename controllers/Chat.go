@@ -69,7 +69,6 @@ func GetChatsByUserId(c *fiber.Ctx) error {
 	})
 }
 
-
 func EditChat(c *fiber.Ctx) error {
 
 	chatId, err := uuid.Parse(c.Params("chatId"))
@@ -107,5 +106,32 @@ func EditChat(c *fiber.Ctx) error {
 		"error":   false,
 		"message": "Chat updated successfully",
 		"data":    chat,
+	})
+}
+
+func DeleteChat(c *fiber.Ctx) error {
+	chatId, err := uuid.Parse(c.Params("chatId"))
+	if err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error":   true,
+			"message": "Invalid chatId format",
+		})
+	}
+	var chat models.Chat
+
+	result := db.DB.Where("id = ?", chatId).Delete(&chat)
+
+
+	if (result.Error != nil) {
+
+		return c.Status(500).JSON(fiber.Map{
+			"error":   true,
+			"message": "Failed to delete chat",
+		})
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"error":   false,
+		"message": "Chat deleted successfully",
 	})
 }
