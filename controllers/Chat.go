@@ -91,6 +91,12 @@ func EditChat(c *fiber.Ctx) error {
 
 	result := db.DB.Model(&models.Chat{}).Where("id = ?", chatId).Updates(&chat).First(&chat)
 	if result.Error != nil {
+		if(result.Error.Error() == "record not found") {
+			return c.Status(404).JSON(fiber.Map{
+				"error":   true,
+				"message": "Chat not found",
+			})
+		}
 		return c.Status(500).JSON(fiber.Map{
 			"error":   true,
 			"message": "Failed to update chat",
