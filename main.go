@@ -4,8 +4,8 @@ import (
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	db "github.com/BassemArfaoui/Quinsat-Server-Side/config"
-	routes "github.com/BassemArfaoui/Quinsat-Server-Side/routes"
+	db "github.com/BassemArfaoui/Weazy-Server/config"
+	routes "github.com/BassemArfaoui/Weazy-Server/routes"
 )
 
 func main() {

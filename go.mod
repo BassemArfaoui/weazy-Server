@@ -1,4 +1,4 @@
-module github.com/BassemArfaoui/Quinsat-Server-Side
+module github.com/BassemArfaoui/Weazy-Server
 
 go 1.23.1
 
