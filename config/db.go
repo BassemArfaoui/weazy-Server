@@ -2,11 +2,12 @@ package config
 
 import (
 	"fmt"
-	// "github.com/BassemArfaoui/Quinsat-Server-Side/models"
+	"os"
+
+	"github.com/BassemArfaoui/Weazy-Server/models"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
-	"os"
 )
 
 var DB *gorm.DB
@@ -20,7 +21,7 @@ func Connect() (*gorm.DB, error) {
 	dbName := os.Getenv("DB_NAME")
 	dbPort := os.Getenv("DB_PORT")
 
-	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable",
+	dsn := fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=require",
 		dbHost, dbUser, dbPassword, dbName, dbPort)
 
 	DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
@@ -35,23 +36,21 @@ func Connect() (*gorm.DB, error) {
 }
 
 
-// func Migrate(db *gorm.DB) error {
+func Migrate(db *gorm.DB) error {
 
-// 	if db == nil {
-// 		return fmt.Errorf("database connection is nil")
-// 	}
+	if db == nil {
+		return fmt.Errorf("database connection is nil")
+	}
 
-// 	err := db.AutoMigrate(
-// 		&models.Branch{},
-// 		&models.Class{},
-// 		&models.Subject{},
-// 		&models.Student{},
-// 	)
+	err := db.AutoMigrate(
+		&models.Chat{},
+		
+	)
 
-// 	if err != nil {
-// 		return fmt.Errorf("failed to migrate database: %w", err)
-// 	}
+	if err != nil {
+		return fmt.Errorf("failed to migrate database: %w", err)
+	}
 
-// 	fmt.Println("Database migrated successfully!")
-// 	return nil
-// }
+	fmt.Println("Database migrated successfully!")
+	return nil
+}
