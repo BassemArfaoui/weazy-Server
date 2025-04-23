@@ -39,7 +39,7 @@ func GetChatsByUserId(c *fiber.Ctx) error {
 	var totalCount int64
 
 	result := db.DB.Where("user_id = ?", userId).
-		Order("created_at DESC").
+		Order("created_at DESC , id DESC").
 		Limit(limit).
 		Offset(offset).
 		Find(&chats)
@@ -70,7 +70,6 @@ func GetChatsByUserId(c *fiber.Ctx) error {
 		"data":        chats,
 	})
 }
-
 
 func EditChat(c *fiber.Ctx) error {
 
