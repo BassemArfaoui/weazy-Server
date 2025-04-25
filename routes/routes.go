@@ -5,6 +5,7 @@ import (
 	"github.com/gofiber/fiber/v2"
 )
 
+
 func Setup(app *fiber.App) {
 
 	//home route
@@ -16,5 +17,9 @@ func Setup(app *fiber.App) {
 	app.Put("/edit-chat/:chatId", ctr.EditChat)
 
 	app.Delete("/delete-chat/:chatId", ctr.DeleteChat)
+
+	app.Post("/create-chat", ctr.CreateChat)
+
+	app.Get("/chat/:chatId", ctr.GetChatById)
 
 }

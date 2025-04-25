@@ -1,11 +1,13 @@
 package main
 
 import (
+	"os"
+	db "github.com/BassemArfaoui/Weazy-Server/config"
+	routes "github.com/BassemArfaoui/Weazy-Server/routes"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
-	db "github.com/BassemArfaoui/Weazy-Server/config"
-	routes "github.com/BassemArfaoui/Weazy-Server/routes"
+	"github.com/joho/godotenv"
 )
 
 func main() {
@@ -14,8 +16,16 @@ func main() {
 	db.Connect()
 
 
+	//port
+	godotenv.Load()
+	port := os.Getenv("APP_PORT")
+
+
+	
 	//app
 	app := fiber.New()
+
+
 
 
 	//middlewares
@@ -34,5 +44,5 @@ func main() {
 
 
 
-	app.Listen(":3333")
+	app.Listen(":" + port)
 }

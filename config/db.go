@@ -3,7 +3,6 @@ package config
 import (
 	"fmt"
 	"os"
-
 	"github.com/BassemArfaoui/Weazy-Server/models"
 	"github.com/joho/godotenv"
 	"gorm.io/driver/postgres"

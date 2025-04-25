@@ -1,15 +1,18 @@
 package controllers
 
 import (
+	"strconv"
+	"strings"
+	"time"
+
 	db "github.com/BassemArfaoui/Weazy-Server/config"
 	"github.com/BassemArfaoui/Weazy-Server/models"
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
-	"strconv"
 )
 
 func GetChatsByUserId(c *fiber.Ctx) error {
-	userId, err := uuid.Parse(c.Params("userId"))
+	userId , err := uuid.Parse(c.Params("userId"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
 			"error":   true,
@@ -135,5 +138,116 @@ func DeleteChat(c *fiber.Ctx) error {
 	return c.Status(200).JSON(fiber.Map{
 		"error":   false,
 		"message": "Chat deleted successfully",
+	})
+}
+
+func CreateChat(c *fiber.Ctx) error {
+	var chat models.Chat
+
+	if err := c.BodyParser(&chat); err != nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error":   true,
+			"message": "Invalid chat data",
+		})
+	}
+
+	if chat.UserId == uuid.Nil {
+		return c.Status(400).JSON(fiber.Map{
+			"error":   true,
+			"message": "UserId and Title are required",
+		})
+	}
+
+	//default
+	if chat.Title == "" {
+		chat.Title = "Untiteled" 
+	}
+
+	chat.Id = uuid.New()
+	chat.CreatedAt = time.Now()
+
+	result := db.DB.Create(&chat).First(&chat)
+	if result.Error != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error":   true,
+			"message": "Failed to create chat",
+		})
+	}
+
+	return c.Status(201).JSON(fiber.Map{
+		"error":   false,
+		"message": "Chat created successfully",
+		"data":    chat,
+	})
+}
+
+// GetChatById retrieves a chat by its ID using raw SQL
+func GetChatById(c *fiber.Ctx) error {
+	chatId := c.Params("chatId")
+	if chatId == "" {
+		return c.Status(400).JSON(fiber.Map{
+			"error":   true,
+			"message": "chatId is required",
+		})
+	}
+
+	query := `
+	SELECT
+		messages.id AS id,
+		messages.sender_role as sender,
+		messages.text as message,
+		messages.image_urls,
+		messages.created_at AS message_created_at
+	FROM messages
+	WHERE messages.chat_id = ?
+	ORDER BY messages.created_at
+	`
+
+	rows, err := db.DB.Raw(query, chatId).Rows()
+	if err != nil {
+		return c.Status(500).JSON(fiber.Map{
+			"error":   true,
+			"message": "Failed to execute query",
+		})
+	}
+	defer rows.Close()
+
+	var messages []map[string]interface{}
+
+	for rows.Next() {
+		var (
+			id          string
+			sender      string
+			message       string
+			imageUrls   *string
+			createdAt   time.Time
+		)
+
+		err := rows.Scan(&id, &sender, &message, &imageUrls, &createdAt)
+		if err != nil {
+			continue
+		}
+
+		var urls []string
+		if imageUrls != nil {
+			cleaned := strings.Trim(*imageUrls, "{}")
+			if cleaned != "" {
+				urls = strings.Split(cleaned, ",")
+			}
+		}
+
+		messages = append(messages, map[string]interface{}{
+			"id":          id,
+			"sender":      sender,
+			"message":     message,
+			"image_urls":  urls,
+			"created_at":  createdAt,
+		})
+	}
+
+	return c.Status(200).JSON(fiber.Map{
+		"error":   false,
+		"message": "Messages fetched successfully",
+		"data":    messages,
 	})
 }
