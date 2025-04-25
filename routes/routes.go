@@ -7,19 +7,16 @@ import (
 
 
 func Setup(app *fiber.App) {
-
-	//home route
+	// Home route
 	app.Get("/", ctr.Home)
 
-	//chat routes
+	// Upload route
+	app.Post("/upload", ctr.Upload)
+
+	// Chat routes
 	app.Get("/chats/:userId", ctr.GetChatsByUserId)
-
 	app.Put("/edit-chat/:chatId", ctr.EditChat)
-
 	app.Delete("/delete-chat/:chatId", ctr.DeleteChat)
-
 	app.Post("/create-chat", ctr.CreateChat)
-
 	app.Get("/chat/:chatId", ctr.GetChatById)
-
 }

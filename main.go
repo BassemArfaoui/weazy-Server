@@ -2,8 +2,8 @@ package main
 
 import (
 	"os"
-	db "github.com/BassemArfaoui/Weazy-Server/config"
-	routes "github.com/BassemArfaoui/Weazy-Server/routes"
+	"github.com/BassemArfaoui/Weazy-Server/config"
+	"github.com/BassemArfaoui/Weazy-Server/routes"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/gofiber/fiber/v2/middleware/logger"
@@ -12,8 +12,9 @@ import (
 
 func main() {
 
-	//database
-	db.Connect()
+	//database and cloud 
+	config.Connect()
+	config.InitCloud()
 
 
 	//port
@@ -26,8 +27,6 @@ func main() {
 	app := fiber.New()
 
 
-
-
 	//middlewares
 	app.Use(cors.New(cors.Config{
 		AllowOrigins: "*", 
@@ -38,11 +37,10 @@ func main() {
 	app.Use(logger.New())
 
 
-	
 	//routes
 	routes.Setup(app)
 
 
-
+	//run
 	app.Listen(":" + port)
 }

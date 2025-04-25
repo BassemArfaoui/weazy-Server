@@ -10,6 +10,14 @@ require (
 	gorm.io/gorm v1.25.12
 )
 
+require (
+	github.com/cloudinary/cloudinary-go/v2 v2.9.1 // direct
+	github.com/creasty/defaults v1.7.0 // indirect
+	github.com/gorilla/schema v1.4.1 // indirect
+	github.com/stretchr/testify v1.8.4 // indirect
+
+)
+
 require github.com/lib/pq v1.10.9 // direct
 
 require (
