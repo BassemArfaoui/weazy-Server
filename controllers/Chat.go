@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -145,43 +146,65 @@ func CreateChat(c *fiber.Ctx) error {
 	var chat models.Chat
 
 	if err := c.BodyParser(&chat); err != nil {
-		return c.Status(400).JSON(fiber.Map{
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   true,
 			"message": "Invalid chat data",
 		})
 	}
 
-	if chat.UserId == uuid.Nil {
-		return c.Status(400).JSON(fiber.Map{
+
+	if chat.UserId == uuid.Nil || chat.Message == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   true,
-			"message": "UserId and Title are required",
+			"message": "UserId and Message are required",
 		})
 	}
 
-	//default
 	if chat.Title == "" {
-		chat.Title = "Untiteled" 
+		chat.Title = "Untitled"
 	}
+	fmt.Println((chat.ImageURLs))
+
+
+
+	fmt.Println((chat.ImageURLs))
+
 
 	chat.Id = uuid.New()
 	chat.CreatedAt = time.Now()
 
-	result := db.DB.Create(&chat).First(&chat)
-	if result.Error != nil {
-		return c.Status(500).JSON(fiber.Map{
+	if err := db.DB.Create(&chat).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
 			"error":   true,
-			"message": "Failed to create chat",
+			"message": "Failed to create chat: " + err.Error(),
 		})
 	}
 
-	return c.Status(201).JSON(fiber.Map{
+	message := models.Message{
+		Id:         uuid.New(),
+		ChatId:     chat.Id,
+		SenderRole: "user",
+		Text:       chat.Message,
+		ImageURLs : chat.ImageURLs,
+		CreatedAt:  time.Now(),
+	}
+
+	if err := db.DB.Create(&message).Error; err != nil {
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error":   true,
+			"message": "Failed to create initial message: " + err.Error(),
+		})
+	}
+
+	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"error":   false,
-		"message": "Chat created successfully",
+		"message": "Chat and initial message created successfully",
 		"data":    chat,
 	})
 }
 
-// GetChatById retrieves a chat by its ID using raw SQL
+
+
 func GetChatById(c *fiber.Ctx) error {
 	chatId := c.Params("chatId")
 	if chatId == "" {

@@ -10,6 +10,8 @@ require (
 	gorm.io/gorm v1.25.12
 )
 
+require github.com/lib/pq v1.10.9 // direct
+
 require (
 	github.com/andybalholm/brotli v1.1.0 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // direct
