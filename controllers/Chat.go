@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 	"time"
@@ -13,7 +12,7 @@ import (
 )
 
 func GetChatsByUserId(c *fiber.Ctx) error {
-	userId , err := uuid.Parse(c.Params("userId"))
+	userId, err := uuid.Parse(c.Params("userId"))
 	if err != nil {
 		return c.Status(400).JSON(fiber.Map{
 			"error":   true,
@@ -85,7 +84,6 @@ func EditChat(c *fiber.Ctx) error {
 		})
 	}
 
-
 	var chat models.Chat
 	if err := c.BodyParser(&chat); err != nil {
 		return c.Status(400).JSON(fiber.Map{
@@ -96,7 +94,7 @@ func EditChat(c *fiber.Ctx) error {
 
 	result := db.DB.Model(&models.Chat{}).Where("id = ?", chatId).Updates(&chat).First(&chat)
 	if result.Error != nil {
-		if(result.Error.Error() == "record not found") {
+		if result.Error.Error() == "record not found" {
 			return c.Status(404).JSON(fiber.Map{
 				"error":   true,
 				"message": "Chat not found",
@@ -127,8 +125,7 @@ func DeleteChat(c *fiber.Ctx) error {
 
 	result := db.DB.Where("id = ?", chatId).Delete(&chat)
 
-
-	if (result.Error != nil) {
+	if result.Error != nil {
 
 		return c.Status(500).JSON(fiber.Map{
 			"error":   true,
@@ -152,23 +149,23 @@ func CreateChat(c *fiber.Ctx) error {
 		})
 	}
 
-
-	if chat.UserId == uuid.Nil || chat.Message == "" {
+	if chat.UserId == uuid.Nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   true,
-			"message": "UserId and Message are required",
+			"message": "UserId is required",
+		})
+	}
+
+	if chat.Message == "" && len(chat.ImageURLs) == 0 {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error":   true,
+			"message": "Either a Message or at least one ImageURL is required",
 		})
 	}
 
 	if chat.Title == "" {
 		chat.Title = "Untitled"
 	}
-	fmt.Println((chat.ImageURLs))
-
-
-
-	fmt.Println((chat.ImageURLs))
-
 
 	chat.Id = uuid.New()
 	chat.CreatedAt = time.Now()
@@ -185,7 +182,7 @@ func CreateChat(c *fiber.Ctx) error {
 		ChatId:     chat.Id,
 		SenderRole: "user",
 		Text:       chat.Message,
-		ImageURLs : chat.ImageURLs,
+		ImageURLs:  chat.ImageURLs,
 		CreatedAt:  time.Now(),
 	}
 
@@ -202,8 +199,6 @@ func CreateChat(c *fiber.Ctx) error {
 		"data":    chat,
 	})
 }
-
-
 
 func GetChatById(c *fiber.Ctx) error {
 	chatId := c.Params("chatId")
@@ -239,11 +234,11 @@ func GetChatById(c *fiber.Ctx) error {
 
 	for rows.Next() {
 		var (
-			id          string
-			sender      string
-			message       string
-			imageUrls   *string
-			createdAt   time.Time
+			id        string
+			sender    string
+			message   string
+			imageUrls *string
+			createdAt time.Time
 		)
 
 		err := rows.Scan(&id, &sender, &message, &imageUrls, &createdAt)
@@ -260,11 +255,11 @@ func GetChatById(c *fiber.Ctx) error {
 		}
 
 		messages = append(messages, map[string]interface{}{
-			"id":          id,
-			"sender":      sender,
-			"message":     message,
-			"image_urls":  urls,
-			"created_at":  createdAt,
+			"id":         id,
+			"sender":     sender,
+			"message":    message,
+			"image_urls": urls,
+			"created_at": createdAt,
 		})
 	}
 
