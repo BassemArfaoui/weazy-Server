@@ -1,7 +1,9 @@
 package main
 
 import (
+	"fmt"
 	"os"
+
 	"github.com/BassemArfaoui/Weazy-Server/config"
 	"github.com/BassemArfaoui/Weazy-Server/routes"
 	"github.com/gofiber/fiber/v2"
@@ -18,10 +20,15 @@ func main() {
 
 
 	//port
-	godotenv.Load()
-	port := os.Getenv("APP_PORT")
+	if err := godotenv.Load(); err != nil {
+		fmt.Println("error loading env vars")
+	}
 
-
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "3333"
+		fmt.Println("PORT not set. Using default port:", port)
+	}
 	
 	//app
 	app := fiber.New()

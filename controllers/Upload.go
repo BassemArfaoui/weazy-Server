@@ -18,13 +18,16 @@ func BoolPtr(b bool) *bool {
 }
 
 func Upload(c *fiber.Ctx) error {
+
 	form, err := c.MultipartForm()
+
 	if err != nil {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"error":   true,
 			"message": "Failed to parse form",
 		})
 	}
+
 	files := form.File["file"]
 	if len(files) == 0 {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
@@ -73,6 +76,7 @@ func Upload(c *fiber.Ctx) error {
 		PublicID: resp.PublicID,
 		URL:      resp.SecureURL,
 	}
+	
 	return c.Status(fiber.StatusOK).JSON(fiber.Map{
 		"error":   false,
 		"message": "Picture uploaded successfully",
