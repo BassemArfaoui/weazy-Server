@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"encoding/json"
 	"strconv"
 	"strings"
 	"time"
@@ -210,15 +211,22 @@ func GetChatById(c *fiber.Ctx) error {
 	}
 
 	query := `
-	SELECT
-		messages.id AS id,
-		messages.sender_role as sender,
-		messages.text as message,
-		messages.image_urls,
-		messages.created_at AS message_created_at
-	FROM messages
-	WHERE messages.chat_id = ?
-	ORDER BY messages.created_at
+	SELECT 
+    m.id AS id,
+    m.sender_role AS sender,
+    m.text AS message,
+    m.image_urls,
+    m.created_at AS message_created_at,
+    COALESCE(
+        JSON_AGG(p.* ORDER BY pid.ordinality) FILTER (WHERE p.id IS NOT NULL), 
+        '[]'
+    ) AS products
+FROM messages m
+LEFT JOIN LATERAL UNNEST(m.products) WITH ORDINALITY AS pid(product_id, ordinality) ON TRUE
+LEFT JOIN products p ON p.id = pid.product_id
+WHERE m.chat_id = ?
+GROUP BY m.id
+ORDER BY m.created_at;
 	`
 
 	rows, err := db.DB.Raw(query, chatId).Rows()
@@ -234,18 +242,20 @@ func GetChatById(c *fiber.Ctx) error {
 
 	for rows.Next() {
 		var (
-			id        string
-			sender    string
-			message   string
-			imageUrls *string
-			createdAt time.Time
+			id          string
+			sender      string
+			message     string
+			imageUrls   *string
+			createdAt   time.Time
+			productsRaw []byte
 		)
 
-		err := rows.Scan(&id, &sender, &message, &imageUrls, &createdAt)
+		err := rows.Scan(&id, &sender, &message, &imageUrls, &createdAt, &productsRaw)
 		if err != nil {
 			continue
 		}
 
+		// Handle image URLs
 		var urls []string
 		if imageUrls != nil {
 			cleaned := strings.Trim(*imageUrls, "{}")
@@ -254,12 +264,19 @@ func GetChatById(c *fiber.Ctx) error {
 			}
 		}
 
+		// Decode products JSON
+		var products []models.Product
+		if err := json.Unmarshal(productsRaw, &products); err != nil {
+			products = []models.Product{} // fallback to empty slice
+		}
+
 		messages = append(messages, map[string]interface{}{
 			"id":         id,
 			"sender":     sender,
 			"message":    message,
 			"image_urls": urls,
 			"created_at": createdAt,
+			"products":   products,
 		})
 	}
 
