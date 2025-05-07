@@ -42,7 +42,7 @@ func GetWishlistByUserId(c *fiber.Ctx) error {
 
 
 	result := db.DB.Raw(`
-		SELECT p.id ,p.gender , p.mastercategory , p.subcategory , p.articletype , p.basecolour , p.season , p.year , p.usage , p.productdisplayname , p.link FROM products p , wishlists w 
+		SELECT DISTINCT p.id ,p.gender , p.mastercategory , p.subcategory , p.articletype , p.basecolour , p.season , p.year , p.usage , p.productdisplayname , p.link FROM products p , wishlists w 
 		where w.user_id = ? and  p.id = w.product_id 
 		LIMIT ? OFFSET ?
 	`, userId, limit, offset).Scan(&products)
@@ -58,10 +58,17 @@ func GetWishlistByUserId(c *fiber.Ctx) error {
 		})
 	}
 
-	err = db.DB.Model(&models.Product{}).
-		Joins("INNER JOIN wishlists w ON products.id = w.product_id").
-		Where("w.user_id = ?", userId).
-		Count(&totalCount).Error
+	err = db.DB.Raw(`
+	SELECT COUNT(*) FROM (
+		SELECT DISTINCT product_id
+		FROM wishlists
+		WHERE user_id = ?
+	) AS distinct_products
+`, userId).Scan(&totalCount).Error
+
+
+
+
 
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{
