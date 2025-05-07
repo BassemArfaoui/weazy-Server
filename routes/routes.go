@@ -23,4 +23,9 @@ func Setup(app *fiber.App) {
 	//message routes
 	app.Post("/save-payload", ctr.SavePayload)
 	app.Post("/save-response" , ctr.SaveResponse)
+
+	//wishlist routes
+	app.Get("/wishlist/:userId", ctr.GetWishlistByUserId)
+	app.Post("/add-to-wishlist", ctr.SaveToWishlist)
+	app.Delete("/delete-wishlist-item/:userId/:productId" , ctr.DeleteWishlistItem)
 }
