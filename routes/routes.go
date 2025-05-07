@@ -18,7 +18,7 @@ func Setup(app *fiber.App) {
 	app.Put("/edit-chat/:chatId", ctr.EditChat)
 	app.Delete("/delete-chat/:chatId", ctr.DeleteChat)
 	app.Post("/create-chat", ctr.CreateChat)
-	app.Get("/chat/:chatId", ctr.GetChatById)
+	app.Get("/chat/:chatId/:userId", ctr.GetChatById)
 
 	//message routes
 	app.Post("/save-payload", ctr.SavePayload)

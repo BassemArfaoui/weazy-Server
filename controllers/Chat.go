@@ -12,6 +12,9 @@ import (
 	"github.com/google/uuid"
 )
 
+
+
+
 func GetChatsByUserId(c *fiber.Ctx) error {
 	userId, err := uuid.Parse(c.Params("userId"))
 	if err != nil {
@@ -210,26 +213,51 @@ func GetChatById(c *fiber.Ctx) error {
 		})
 	}
 
+	userId := c.Params("userId")
+	if userId == "" {
+		return c.Status(400).JSON(fiber.Map{
+			"error":   true,
+			"message": "userId is required",
+		})
+	}
+
 	query := `
 	SELECT 
-    m.id AS id,
-    m.sender_role AS sender,
-    m.text AS message,
-    m.image_urls,
-    m.created_at AS message_created_at,
-    COALESCE(
-        JSON_AGG(p.* ORDER BY pid.ordinality) FILTER (WHERE p.id IS NOT NULL), 
-        '[]'
-    ) AS products
-FROM messages m
-LEFT JOIN LATERAL UNNEST(m.products) WITH ORDINALITY AS pid(product_id, ordinality) ON TRUE
-LEFT JOIN products p ON p.id = pid.product_id
-WHERE m.chat_id = ?
-GROUP BY m.id
-ORDER BY m.created_at;
+		m.id AS id,
+		m.sender_role AS sender,
+		m.text AS message,
+		m.image_urls,
+		m.created_at AS message_created_at,
+		COALESCE(
+			JSON_AGG(
+				JSON_BUILD_OBJECT(
+					'id', p.id,
+					'gender', p.gender,
+					'mastercategory', p.mastercategory,
+					'subcategory', p.subcategory,
+					'articletype', p.articletype,
+					'basecolour', p.basecolour,
+					'season', p.season,
+					'year', p.year,
+					'usage', p.usage,
+					'productdisplayname', p.productdisplayname,
+					'link', p.link,
+					'is_liked', CASE WHEN w.product_id IS NOT NULL THEN true ELSE false END
+				)
+				ORDER BY pid.ordinality
+			) FILTER (WHERE p.id IS NOT NULL),
+			'[]'
+		) AS products
+	FROM messages m
+	LEFT JOIN LATERAL UNNEST(m.products) WITH ORDINALITY AS pid(product_id, ordinality) ON TRUE
+	LEFT JOIN products p ON p.id = pid.product_id
+	LEFT JOIN wishlists w ON w.product_id = p.id AND w.user_id = ?
+	WHERE m.chat_id = ?
+	GROUP BY m.id
+	ORDER BY m.created_at;
 	`
 
-	rows, err := db.DB.Raw(query, chatId).Rows()
+	rows, err := db.DB.Raw(query, userId, chatId).Rows()
 	if err != nil {
 		return c.Status(500).JSON(fiber.Map{
 			"error":   true,
@@ -267,7 +295,7 @@ ORDER BY m.created_at;
 		// Decode products JSON
 		var products []models.Product
 		if err := json.Unmarshal(productsRaw, &products); err != nil {
-			products = []models.Product{} // fallback to empty slice
+			products = []models.Product{}
 		}
 
 		messages = append(messages, map[string]interface{}{
@@ -286,3 +314,4 @@ ORDER BY m.created_at;
 		"data":    messages,
 	})
 }
+

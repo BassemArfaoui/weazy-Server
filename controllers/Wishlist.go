@@ -10,8 +10,6 @@ import (
 	"github.com/google/uuid"
 )
 
-
-
 func GetWishlistByUserId(c *fiber.Ctx) error {
 	userId, err := uuid.Parse(c.Params("userId"))
 	if err != nil {
@@ -42,12 +40,16 @@ func GetWishlistByUserId(c *fiber.Ctx) error {
 	var products []models.Product
 	var totalCount int64
 
+
 	result := db.DB.Raw(`
-		SELECT p.* FROM products p
-		INNER JOIN wishlists w ON p.id = w.product_id
-		WHERE w.user_id = ?
+		SELECT p.id ,p.gender , p.mastercategory , p.subcategory , p.articletype , p.basecolour , p.season , p.year , p.usage , p.productdisplayname , p.link FROM products p , wishlists w 
+		where w.user_id = ? and  p.id = w.product_id 
 		LIMIT ? OFFSET ?
 	`, userId, limit, offset).Scan(&products)
+
+	for i := range products {
+		products[i].IsLiked = true
+	}
 
 	if result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{
@@ -80,7 +82,6 @@ func GetWishlistByUserId(c *fiber.Ctx) error {
 	})
 }
 
-
 func SaveToWishlist(c *fiber.Ctx) error {
 	var wishlist models.Wishlist
 
@@ -98,7 +99,6 @@ func SaveToWishlist(c *fiber.Ctx) error {
 		})
 	}
 
-
 	wishlist.CreatedAt = time.Now()
 
 	if err := db.DB.Create(&wishlist).Error; err != nil {
@@ -108,7 +108,6 @@ func SaveToWishlist(c *fiber.Ctx) error {
 		})
 	}
 
-
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"error":   false,
 		"message": "wishlist item added successfully",
@@ -116,11 +115,9 @@ func SaveToWishlist(c *fiber.Ctx) error {
 	})
 }
 
-
 func DeleteWishlistItem(c *fiber.Ctx) error {
-	
-	productId:= c.Params("productId")
 
+	productId := c.Params("productId")
 
 	userId, err := uuid.Parse(c.Params("userId"))
 	if err != nil {
@@ -132,7 +129,7 @@ func DeleteWishlistItem(c *fiber.Ctx) error {
 
 	var wishlist models.Wishlist
 
-	result := db.DB.Where("user_id = ? and  product_id= ?", userId , productId).Delete(&wishlist)
+	result := db.DB.Where("user_id = ? and  product_id= ?", userId, productId).Delete(&wishlist)
 
 	if result.Error != nil {
 
@@ -147,4 +144,3 @@ func DeleteWishlistItem(c *fiber.Ctx) error {
 		"message": "wishlist item deleted successfully",
 	})
 }
-
