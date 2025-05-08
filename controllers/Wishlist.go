@@ -40,11 +40,13 @@ func GetWishlistByUserId(c *fiber.Ctx) error {
 	var products []models.Product
 	var totalCount int64
 
-
+	//todo make it ordered
 	result := db.DB.Raw(`
-		SELECT DISTINCT p.id ,p.gender , p.mastercategory , p.subcategory , p.articletype , p.basecolour , p.season , p.year , p.usage , p.productdisplayname , p.link FROM products p , wishlists w 
-		where w.user_id = ? and  p.id = w.product_id 
-		LIMIT ? OFFSET ?
+	SELECT DISTINCT p.* , wl.created_at 
+	FROM products p
+	JOIN wishlists wl ON p.id = wl.product_id
+	WHERE wl.user_id = ?
+	LIMIT ? OFFSET ?
 	`, userId, limit, offset).Scan(&products)
 
 	for i := range products {
