@@ -42,12 +42,13 @@ func GetWishlistByUserId(c *fiber.Ctx) error {
 
 	//todo make it ordered
 	result := db.DB.Raw(`
-	SELECT DISTINCT p.* , wl.created_at 
+	SELECT DISTINCT p.*, wl.created_at 
 	FROM products p
 	JOIN wishlists wl ON p.id = wl.product_id
 	WHERE wl.user_id = ?
+	ORDER BY wl.created_at DESC
 	LIMIT ? OFFSET ?
-	`, userId, limit, offset).Scan(&products)
+`, userId, limit, offset).Scan(&products)
 
 	for i := range products {
 		products[i].IsLiked = true
